@@ -1,4 +1,4 @@
-import { describe, test } from '@jest/globals';
+import { describe, expect, test } from '@jest/globals';
 import supertest from 'supertest';
 import { App } from './app';
 
@@ -11,5 +11,13 @@ describe('App', () => {
     await supertest(`http://localhost:3000`).get('/').expect(404);
 
     app.stop();
+  });
+
+  describe.only('port', () => {
+    test('default port config to 3000', () => {
+      const app = new App();
+
+      expect(app.getPort()).toEqual(3000);
+    });
   });
 });
