@@ -1,7 +1,7 @@
 import { describe, expect, jest, test } from '@jest/globals';
 import supertest from 'supertest';
 import { App } from './app';
-import { NextFunction } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 
 describe('App', () => {
   describe('listen', () => {
@@ -10,9 +10,11 @@ describe('App', () => {
 
       app.listen();
 
-      await supertest(`http://localhost:3000`).get('/').expect(404);
-
-      app.stop();
+      try {
+        await supertest(`http://localhost:3000`).get('/').expect(404);
+      } finally {
+        app.stop();
+      }
     });
 
     test('listen callback', async () => {
@@ -21,9 +23,11 @@ describe('App', () => {
 
       app.listen(listenCallback);
 
-      await supertest(`http://localhost:3000`).get('/').expect(404);
-
-      app.stop();
+      try {
+        await supertest(`http://localhost:3000`).get('/').expect(404);
+      } finally {
+        app.stop();
+      }
 
       expect(listenCallback).toHaveBeenCalled();
       expect(listenCallback.mock.calls[0][0]).toBe(3000);
@@ -36,13 +40,15 @@ describe('App', () => {
 
       app.setPort(5000).listen();
 
-      await supertest(`http://localhost:5000`).get('/').expect(404);
-
-      app.stop();
+      try {
+        await supertest(`http://localhost:5000`).get('/').expect(404);
+      } finally {
+        app.stop();
+      }
     });
   });
 
-  describe.only('middleware', () => {
+  describe('middleware', () => {
     test('set middleware', async () => {
       const app = new App();
 
@@ -55,14 +61,43 @@ describe('App', () => {
         }),
       ];
 
-      app.setMiddleware(middlewares).listen();
+      app.setMiddlewares(middlewares).listen();
 
-      await supertest(`http://localhost:3000`).get('/').expect(404);
+      try {
+        await supertest(`http://localhost:3000`).get('/').expect(404);
 
-      expect(middlewares[0]).toHaveBeenCalled();
-      expect(middlewares[1]).toHaveBeenCalled();
+        expect(middlewares[0]).toHaveBeenCalled();
+        expect(middlewares[1]).toHaveBeenCalled();
+      } finally {
+        app.stop();
+      }
+    });
+  });
 
-      app.stop();
+  describe('routes', () => {
+    test('set routes', async () => {
+      const app = new App();
+
+      const testRoute = Router();
+      testRoute
+        .route('/')
+        .get((req, res) => res.json('Get'))
+        .post((req, res) => res.json('Post'))
+        .patch((req, res) => res.json('Patch'))
+        .delete((req, res) => res.json('Delete'));
+
+      const routes = [testRoute];
+
+      app.setRoutes(routes).listen();
+
+      try {
+        await supertest(`http://localhost:3000`).get('/').expect(200);
+        await supertest(`http://localhost:3000`).post('/').expect(200);
+        await supertest(`http://localhost:3000`).patch('/').expect(200);
+        await supertest(`http://localhost:3000`).delete('/').expect(200);
+      } finally {
+        app.stop();
+      }
     });
   });
 });
