@@ -1,12 +1,15 @@
-import express from 'express';
+import express, { Handler } from 'express';
 import { Server } from 'http';
 
 export class App {
   private server: Server;
   private port: number = 3000;
+  private middlewares: Handler[];
 
   listen(cb?: (port: number) => any) {
     const app = express();
+
+    this.middlewares.forEach((middleware) => app.use(middleware));
 
     this.server = app.listen(this.port, () => {
       if (cb) {
@@ -19,11 +22,15 @@ export class App {
     this.server.close();
   }
 
-  getPort(): number {
-    return this.port;
+  setPort(port: number): this {
+    this.port = port;
+
+    return this;
   }
 
-  setPort(port: number) {
-    this.port = port;
+  setMiddleware(middlewares: Handler[]): this {
+    this.middlewares = middlewares;
+
+    return this;
   }
 }
