@@ -5,10 +5,14 @@ export class App {
   private server: Server;
   private port: number = 3000;
 
-  listen() {
+  listen(cb?: (port: number) => any) {
     const app = express();
 
-    this.server = app.listen(this.port);
+    this.server = app.listen(this.port, () => {
+      if (cb) {
+        cb(this.port);
+      }
+    });
   }
 
   stop() {
