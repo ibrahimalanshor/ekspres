@@ -8,7 +8,7 @@ export class App {
   listen() {
     const app = express();
 
-    this.server = app.listen(3000);
+    this.server = app.listen(this.port);
   }
 
   stop() {
@@ -17,5 +17,9 @@ export class App {
 
   getPort(): number {
     return this.port;
+  }
+
+  setPort(port: number) {
+    this.port = port;
   }
 }

@@ -19,5 +19,19 @@ describe('App', () => {
 
       expect(app.getPort()).toEqual(3000);
     });
+
+    test('set port', async () => {
+      const app = new App();
+
+      app.setPort(5000);
+
+      expect(app.getPort()).toEqual(5000);
+
+      app.listen();
+
+      await supertest(`http://localhost:5000`).get('/').expect(404);
+
+      app.stop();
+    });
   });
 });
