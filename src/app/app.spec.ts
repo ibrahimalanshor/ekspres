@@ -1,7 +1,8 @@
 import { describe, expect, jest, test } from '@jest/globals';
 import supertest from 'supertest';
 import { App } from './app';
-import { NextFunction, Request, Response, Router } from 'express';
+import { NextFunction, Router } from 'express';
+import { ErrorResponse } from './app.types';
 
 describe('App', () => {
   describe('listen', () => {
@@ -95,6 +96,34 @@ describe('App', () => {
         await supertest(`http://localhost:3000`).post('/').expect(200);
         await supertest(`http://localhost:3000`).patch('/').expect(200);
         await supertest(`http://localhost:3000`).delete('/').expect(200);
+      } finally {
+        app.stop();
+      }
+    });
+  });
+
+  describe.only('error', () => {
+    test('throw 500 error', async () => {
+      const router = Router();
+      const app = new App().setRoutes([
+        router.get('/', (req, res) => {
+          throw new Error('Something Error');
+        }),
+      ]);
+
+      app.listen();
+
+      try {
+        const res = await supertest(`http://localhost:3000`)
+          .get('/')
+          .expect(500);
+        const errorResponse: ErrorResponse = {
+          name: 'Internal Server Error',
+          message: 'Something Error',
+          status: 500,
+        };
+
+        expect(res.body).toEqual(errorResponse);
       } finally {
         app.stop();
       }
