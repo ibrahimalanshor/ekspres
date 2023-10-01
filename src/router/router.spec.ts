@@ -2,13 +2,11 @@ import { describe, expect, jest, test } from '@jest/globals';
 import { Router } from './router';
 import { RouterError } from '../errors/router.error';
 import { RouterHandler } from './router.types';
-import { Router as ExpressRouter } from 'express';
+import { request } from 'express';
+import { App } from '../app/app';
+import supertest from 'supertest';
 
 describe.only('Router', () => {
-  // test('set method', () => {
-  //     expect(Router.prototype.setMethod).toBeDefined()
-  //     expect(typeof Router.prototype.setMethod).toBe('function')
-  // })
   describe('path', () => {
     test('throw if path unset', () => {
       const router = new Router();
@@ -46,7 +44,7 @@ describe.only('Router', () => {
     });
   });
 
-  describe.only('handler', () => {
+  describe('handler', () => {
     test('throw if handler unset', () => {
       const router = new Router();
 
@@ -69,6 +67,25 @@ describe.only('Router', () => {
 
       expect(() => router.make()).not.toThrow(RouterError);
       expect(() => router.make()).not.toThrow('Handler is unset');
+    });
+  });
+
+  describe.only('make', () => {
+    test('resolved value', async () => {
+      const router = new Router<string>();
+      const app = new App();
+
+      const handler = jest
+        .fn<RouterHandler<string>>()
+        .mockResolvedValue('test');
+      router.setPath('/').setMethod('get').handle(handler);
+
+      app.setRoutes([router.make()]);
+
+      const res = await supertest(app.getServer()).get('/').expect(200);
+
+      expect(res.body).toEqual('test');
+      expect(handler).toHaveBeenCalled();
     });
   });
 });
