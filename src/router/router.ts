@@ -1,4 +1,4 @@
-import { RequestHandler, Router as ExpressRouter } from 'express';
+import { RequestHandler, Router as ExpressRouter, NextFunction } from 'express';
 import { RouterError } from '../errors/router.error';
 import { RouterHandler, RouterMethod } from './router.types';
 
@@ -49,11 +49,17 @@ export class Router<T> {
 
     const router = ExpressRouter();
 
-    router.route(this.path)[this.method](async (req, res) => {
-      const data = await this.handler({ req, res });
+    router
+      .route(this.path)
+      [this.method](async (req, res, next: NextFunction) => {
+        try {
+          const data = await this.handler({ req, res });
 
-      return res.json(data);
-    });
+          return res.json(data);
+        } catch (err) {
+          next(err);
+        }
+      });
 
     return router;
   }
