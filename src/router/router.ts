@@ -1,10 +1,11 @@
-import { RequestHandler } from 'express';
+import { RequestHandler, Router as ExpressRouter } from 'express';
 import { RouterError } from '../errors/router.error';
-import { RouterMethod } from './router.types';
+import { RouterHandler, RouterMethod } from './router.types';
 
-export class Router {
+export class Router<T> {
   private path: string;
   private method: RouterMethod;
+  private handler: RouterHandler<T>;
 
   setPath(path: string): this {
     this.path = path;
@@ -14,6 +15,12 @@ export class Router {
 
   setMethod(method: RouterMethod): this {
     this.method = method;
+
+    return this;
+  }
+
+  handle(handler: RouterHandler<T>): this {
+    this.handler = handler;
 
     return this;
   }
@@ -33,6 +40,21 @@ export class Router {
       });
     }
 
-    return (req, res) => {};
+    if (!this.handler) {
+      throw new RouterError({
+        name: 'HANDLER_UNSET',
+        message: 'Handler is unset',
+      });
+    }
+
+    const router = ExpressRouter();
+
+    router.route(this.path)[this.method](async (req, res) => {
+      const data = await this.handler({ req, res });
+
+      return res.json(data);
+    });
+
+    return router;
   }
 }

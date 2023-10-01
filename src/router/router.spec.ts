@@ -1,6 +1,8 @@
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, jest, test } from '@jest/globals';
 import { Router } from './router';
 import { RouterError } from '../errors/router.error';
+import { RouterHandler } from './router.types';
+import { Router as ExpressRouter } from 'express';
 
 describe.only('Router', () => {
   // test('set method', () => {
@@ -24,7 +26,7 @@ describe.only('Router', () => {
     });
   });
 
-  describe.only('method', () => {
+  describe('method', () => {
     test('throw if method unset', () => {
       const router = new Router();
 
@@ -41,6 +43,32 @@ describe.only('Router', () => {
       router.setMethod('get');
 
       expect(() => router.make()).not.toThrow('Method is unset');
+    });
+  });
+
+  describe.only('handler', () => {
+    test('throw if handler unset', () => {
+      const router = new Router();
+
+      router.setPath('/');
+      router.setMethod('get');
+
+      expect(() => router.make()).toThrow(RouterError);
+      expect(() => router.make()).toThrow('Handler is unset');
+    });
+
+    test('set handler', () => {
+      const router = new Router<string>();
+      const handler = jest
+        .fn<RouterHandler<string>>()
+        .mockResolvedValue('test');
+
+      router.setPath('/');
+      router.setMethod('get');
+      router.handle(handler);
+
+      expect(() => router.make()).not.toThrow(RouterError);
+      expect(() => router.make()).not.toThrow('Handler is unset');
     });
   });
 });
