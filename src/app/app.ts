@@ -6,7 +6,7 @@ import express, {
   Response,
   NextFunction,
 } from 'express';
-import { Server } from 'http';
+import { Server, createServer } from 'http';
 import { HttpError } from '../errors/http.error';
 import { ErrorResponse } from './app.types';
 
@@ -21,11 +21,14 @@ export class App {
     this.app = express();
   }
 
-  listen(cb?: (port: number) => any) {
-    this.middlewares.forEach((middleware) => this.app.use(middleware));
-    this.routes.forEach((route) => this.app.use(route));
+  getServer(): Server {
+    this.setup();
 
-    this.setupErrorHandler();
+    return this.server ?? createServer(this.app);
+  }
+
+  listen(cb?: (port: number) => any) {
+    this.setup();
 
     this.server = this.app.listen(this.port, () => {
       if (cb) {
@@ -36,6 +39,13 @@ export class App {
 
   stop() {
     this.server.close();
+  }
+
+  setup() {
+    this.middlewares.forEach((middleware) => this.app.use(middleware));
+    this.routes.forEach((route) => this.app.use(route));
+
+    this.setErrorHandler();
   }
 
   setPort(port: number): this {
@@ -56,7 +66,7 @@ export class App {
     return this;
   }
 
-  setupErrorHandler() {
+  setErrorHandler() {
     this.app.use(
       (err: any, req: Request, res: Response, next: NextFunction) => {
         if (err instanceof HttpError) {

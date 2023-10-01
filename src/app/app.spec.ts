@@ -4,8 +4,9 @@ import { App } from './app';
 import { NextFunction, Router } from 'express';
 import { ErrorResponse } from './app.types';
 import { HttpError } from '../errors/http.error';
+import { Server } from 'http';
 
-describe('App', () => {
+describe.only('App', () => {
   describe('listen', () => {
     test('listen to default port', async () => {
       const app = new App();
@@ -50,6 +51,12 @@ describe('App', () => {
     });
   });
 
+  describe('server', () => {
+    test('get server object', () => {
+      expect(new App().getServer()).toBeInstanceOf(Server);
+    });
+  });
+
   describe('middleware', () => {
     test('set middleware', async () => {
       const app = new App();
@@ -66,7 +73,7 @@ describe('App', () => {
       app.setMiddlewares(middlewares).listen();
 
       try {
-        await supertest(`http://localhost:3000`).get('/').expect(404);
+        await supertest(app.getServer()).get('/').expect(404);
 
         expect(middlewares[0]).toHaveBeenCalled();
         expect(middlewares[1]).toHaveBeenCalled();
@@ -93,10 +100,10 @@ describe('App', () => {
       app.setRoutes(routes).listen();
 
       try {
-        await supertest(`http://localhost:3000`).get('/').expect(200);
-        await supertest(`http://localhost:3000`).post('/').expect(200);
-        await supertest(`http://localhost:3000`).patch('/').expect(200);
-        await supertest(`http://localhost:3000`).delete('/').expect(200);
+        await supertest(app.getServer()).get('/').expect(200);
+        await supertest(app.getServer()).post('/').expect(200);
+        await supertest(app.getServer()).patch('/').expect(200);
+        await supertest(app.getServer()).delete('/').expect(200);
       } finally {
         app.stop();
       }
@@ -115,9 +122,7 @@ describe('App', () => {
       app.listen();
 
       try {
-        const res = await supertest(`http://localhost:3000`)
-          .get('/')
-          .expect(500);
+        const res = await supertest(app.getServer()).get('/').expect(500);
         const errorRes: ErrorResponse = {
           name: 'Internal Server Error',
           message: 'Something Error',
@@ -166,7 +171,7 @@ describe('App', () => {
       app.listen();
 
       try {
-        const forbiddenRes = await supertest(`http://localhost:3000`)
+        const forbiddenRes = await supertest(app.getServer())
           .get('/')
           .expect(403);
         const forbiddenErrorRes: ErrorResponse = {
@@ -177,7 +182,7 @@ describe('App', () => {
 
         expect(forbiddenRes.body).toEqual(forbiddenErrorRes);
 
-        const unprocessableEntityRes = await supertest(`http://localhost:3000`)
+        const unprocessableEntityRes = await supertest(app.getServer())
           .post('/')
           .expect(422);
         const unprocessableErrorRes: ErrorResponse = {
