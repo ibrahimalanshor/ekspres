@@ -3,6 +3,7 @@ import supertest from 'supertest';
 import { App } from './app';
 import { NextFunction, Router } from 'express';
 import { ErrorResponse } from './app.types';
+import { HttpError } from '../errors/http.error';
 
 describe('App', () => {
   describe('listen', () => {
@@ -102,7 +103,7 @@ describe('App', () => {
     });
   });
 
-  describe.only('error', () => {
+  describe('error', () => {
     test('throw 500 error', async () => {
       const router = Router();
       const app = new App().setRoutes([
@@ -117,13 +118,76 @@ describe('App', () => {
         const res = await supertest(`http://localhost:3000`)
           .get('/')
           .expect(500);
-        const errorResponse: ErrorResponse = {
+        const errorRes: ErrorResponse = {
           name: 'Internal Server Error',
           message: 'Something Error',
           status: 500,
         };
 
-        expect(res.body).toEqual(errorResponse);
+        expect(res.body).toEqual(errorRes);
+      } finally {
+        app.stop();
+      }
+    });
+
+    test('throw http error', async () => {
+      const router = Router();
+
+      const forbiddenError = new HttpError(
+        {
+          name: 'Forbidden',
+          message: 'You dont have access',
+        },
+        403,
+      );
+      const unprocessableEntityError = new HttpError(
+        {
+          name: 'Unprocessable Content',
+          message: 'Invalid payload',
+          details: [
+            {
+              path: '/',
+              value: null,
+            },
+          ],
+        },
+        422,
+      );
+
+      const app = new App().setRoutes([
+        router.get('/', (req, res) => {
+          throw forbiddenError;
+        }),
+        router.post('/', (req, res) => {
+          throw unprocessableEntityError;
+        }),
+      ]);
+
+      app.listen();
+
+      try {
+        const forbiddenRes = await supertest(`http://localhost:3000`)
+          .get('/')
+          .expect(403);
+        const forbiddenErrorRes: ErrorResponse = {
+          message: forbiddenError.message,
+          name: forbiddenError.name,
+          status: forbiddenError.status,
+        };
+
+        expect(forbiddenRes.body).toEqual(forbiddenErrorRes);
+
+        const unprocessableEntityRes = await supertest(`http://localhost:3000`)
+          .post('/')
+          .expect(422);
+        const unprocessableErrorRes: ErrorResponse = {
+          message: unprocessableEntityError.message,
+          name: unprocessableEntityError.name,
+          status: unprocessableEntityError.status,
+          details: unprocessableEntityError.details,
+        };
+
+        expect(unprocessableEntityRes.body).toEqual(unprocessableErrorRes);
       } finally {
         app.stop();
       }

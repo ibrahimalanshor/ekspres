@@ -59,6 +59,21 @@ export class App {
   setupErrorHandler() {
     this.app.use(
       (err: any, req: Request, res: Response, next: NextFunction) => {
+        if (err instanceof HttpError) {
+          const errorParsed: ErrorResponse = {
+            status: err.status,
+            message: err.message,
+            name: err.name,
+            ...(err.details
+              ? {
+                  details: err.details,
+                }
+              : {}),
+          };
+
+          return res.status(errorParsed.status).json(errorParsed);
+        }
+
         const errorParsed: ErrorResponse = {
           status: 500,
           name: 'Internal Server Error',
