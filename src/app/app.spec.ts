@@ -4,6 +4,7 @@ import { App } from './app';
 import { NextFunction, Router } from 'express';
 import { ErrorResponse } from './app.types';
 import { HttpError } from '../errors/http.error';
+import { Server } from 'http';
 
 describe('App', () => {
   describe('listen', () => {
@@ -50,6 +51,12 @@ describe('App', () => {
     });
   });
 
+  describe('server', () => {
+    test('get server object', () => {
+      expect(new App().getServer()).toBeInstanceOf(Server);
+    });
+  });
+
   describe('middleware', () => {
     test('set middleware', async () => {
       const app = new App();
@@ -63,16 +70,12 @@ describe('App', () => {
         }),
       ];
 
-      app.setMiddlewares(middlewares).listen();
+      app.setMiddlewares(middlewares);
 
-      try {
-        await supertest(`http://localhost:3000`).get('/').expect(404);
+      await supertest(app.getServer()).get('/').expect(404);
 
-        expect(middlewares[0]).toHaveBeenCalled();
-        expect(middlewares[1]).toHaveBeenCalled();
-      } finally {
-        app.stop();
-      }
+      expect(middlewares[0]).toHaveBeenCalled();
+      expect(middlewares[1]).toHaveBeenCalled();
     });
   });
 
@@ -90,16 +93,12 @@ describe('App', () => {
 
       const routes = [testRoute];
 
-      app.setRoutes(routes).listen();
+      app.setRoutes(routes);
 
-      try {
-        await supertest(`http://localhost:3000`).get('/').expect(200);
-        await supertest(`http://localhost:3000`).post('/').expect(200);
-        await supertest(`http://localhost:3000`).patch('/').expect(200);
-        await supertest(`http://localhost:3000`).delete('/').expect(200);
-      } finally {
-        app.stop();
-      }
+      await supertest(app.getServer()).get('/').expect(200);
+      await supertest(app.getServer()).post('/').expect(200);
+      await supertest(app.getServer()).patch('/').expect(200);
+      await supertest(app.getServer()).delete('/').expect(200);
     });
   });
 
@@ -112,22 +111,14 @@ describe('App', () => {
         }),
       ]);
 
-      app.listen();
+      const res = await supertest(app.getServer()).get('/').expect(500);
+      const errorRes: ErrorResponse = {
+        name: 'Internal Server Error',
+        message: 'Something Error',
+        status: 500,
+      };
 
-      try {
-        const res = await supertest(`http://localhost:3000`)
-          .get('/')
-          .expect(500);
-        const errorRes: ErrorResponse = {
-          name: 'Internal Server Error',
-          message: 'Something Error',
-          status: 500,
-        };
-
-        expect(res.body).toEqual(errorRes);
-      } finally {
-        app.stop();
-      }
+      expect(res.body).toEqual(errorRes);
     });
 
     test('throw http error', async () => {
@@ -163,34 +154,28 @@ describe('App', () => {
         }),
       ]);
 
-      app.listen();
+      const forbiddenRes = await supertest(app.getServer())
+        .get('/')
+        .expect(403);
+      const forbiddenErrorRes: ErrorResponse = {
+        message: forbiddenError.message,
+        name: forbiddenError.name,
+        status: forbiddenError.status,
+      };
 
-      try {
-        const forbiddenRes = await supertest(`http://localhost:3000`)
-          .get('/')
-          .expect(403);
-        const forbiddenErrorRes: ErrorResponse = {
-          message: forbiddenError.message,
-          name: forbiddenError.name,
-          status: forbiddenError.status,
-        };
+      expect(forbiddenRes.body).toEqual(forbiddenErrorRes);
 
-        expect(forbiddenRes.body).toEqual(forbiddenErrorRes);
+      const unprocessableEntityRes = await supertest(app.getServer())
+        .post('/')
+        .expect(422);
+      const unprocessableErrorRes: ErrorResponse = {
+        message: unprocessableEntityError.message,
+        name: unprocessableEntityError.name,
+        status: unprocessableEntityError.status,
+        details: unprocessableEntityError.details,
+      };
 
-        const unprocessableEntityRes = await supertest(`http://localhost:3000`)
-          .post('/')
-          .expect(422);
-        const unprocessableErrorRes: ErrorResponse = {
-          message: unprocessableEntityError.message,
-          name: unprocessableEntityError.name,
-          status: unprocessableEntityError.status,
-          details: unprocessableEntityError.details,
-        };
-
-        expect(unprocessableEntityRes.body).toEqual(unprocessableErrorRes);
-      } finally {
-        app.stop();
-      }
+      expect(unprocessableEntityRes.body).toEqual(unprocessableErrorRes);
     });
   });
 });
