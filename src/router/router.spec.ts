@@ -2,13 +2,13 @@ import { describe, expect, jest, test } from '@jest/globals';
 import { Router } from './router';
 import { RouterError } from '../errors/router.error';
 import { RouterHandler } from './router.types';
-import { request } from 'express';
 import { App } from '../app/app';
 import supertest from 'supertest';
+import { NextFunction } from 'express';
 import { ErrorResponse } from '../app/app.types';
 import { HttpError } from '../errors/http.error';
 
-describe.only('Router', () => {
+describe('Router', () => {
   describe('path', () => {
     test('throw if path unset', () => {
       const router = new Router();
@@ -136,6 +136,30 @@ describe.only('Router', () => {
         status: 403,
       };
       expect(res.body).toEqual(errorRes);
+    });
+  });
+
+  describe('middleware', () => {
+    test('handler called', async () => {
+      const router = new Router();
+      const app = new App();
+
+      const middlewares = [
+        jest.fn((req, res, next: NextFunction) => next()),
+        jest.fn((req, res, next: NextFunction) => next()),
+      ];
+
+      router
+        .setPath('/')
+        .setMethod('post')
+        .addMiddlewares(middlewares)
+        .handle(async () => 'Ok');
+      app.setRoutes([router.make()]);
+
+      await supertest(app.getServer()).post('/').expect(200);
+
+      expect(middlewares[0]).toHaveBeenCalled();
+      expect(middlewares[1]).toHaveBeenCalled();
     });
   });
 });

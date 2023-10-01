@@ -1,4 +1,11 @@
-import { RequestHandler, Router as ExpressRouter, NextFunction } from 'express';
+import {
+  RequestHandler,
+  Router as ExpressRouter,
+  Request,
+  Response,
+  NextFunction,
+  Handler,
+} from 'express';
 import { RouterError } from '../errors/router.error';
 import { RouterHandler, RouterMethod } from './router.types';
 
@@ -6,6 +13,7 @@ export class Router<T> {
   private path: string;
   private method: RouterMethod;
   private handler: RouterHandler<T>;
+  private midllewares: Handler[] = [];
 
   setPath(path: string): this {
     this.path = path;
@@ -15,6 +23,12 @@ export class Router<T> {
 
   setMethod(method: RouterMethod): this {
     this.method = method;
+
+    return this;
+  }
+
+  addMiddlewares(middlewares: Handler[]): this {
+    this.midllewares = middlewares;
 
     return this;
   }
@@ -51,15 +65,18 @@ export class Router<T> {
 
     router
       .route(this.path)
-      [this.method](async (req, res, next: NextFunction) => {
-        try {
-          const data = await this.handler({ req, res });
+      [this.method](
+        this.midllewares,
+        async (req: Request, res: Response, next: NextFunction) => {
+          try {
+            const data = await this.handler({ req, res });
 
-          return res.json(data);
-        } catch (err) {
-          next(err);
-        }
-      });
+            return res.json(data);
+          } catch (err) {
+            next(err);
+          }
+        },
+      );
 
     return router;
   }
