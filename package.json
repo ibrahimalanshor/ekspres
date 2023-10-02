@@ -4,7 +4,9 @@
   "description": "ekspres",
   "homepage": "https://github.com/ibrahimalanshor/ekspres#readme",
   "author": "Ibrahim Al Anshor <ibrahimalanshor6@gmail.com> (https://ibrahimalanshor.github.io/)",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.js",
   "license": "ISC",
   "repository": {
@@ -40,6 +42,7 @@
   },
   "dependencies": {
     "express": "^4.18.2",
-    "galat": "^1.0.2"
+    "galat": "^1.0.2",
+    "kueri": "^1.0.0"
   }
 }
