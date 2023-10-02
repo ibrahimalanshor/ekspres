@@ -1,5 +1,9 @@
 import { Handler, Request } from 'express';
-import { QueryForAllParser, ValidationError } from 'kueri';
+import {
+  QueryForAllParser,
+  QueryForSingleParser,
+  ValidationError,
+} from 'kueri';
 import { HttpError } from '../../errors/http.error';
 
 export function createQueryMiddleware(): {
@@ -30,6 +34,28 @@ export function createQueryMiddleware(): {
         return next(err);
       }
     },
-    forSingle: (req, res, next) => next(),
+    forSingle: async (req, res, next) => {
+      try {
+        const parsed = await new QueryForSingleParser().make(req.query);
+
+        req.query = parsed as unknown as Request['query'];
+
+        next();
+      } catch (err) {
+        if (err instanceof ValidationError) {
+          return next(
+            new HttpError(
+              {
+                name: 'BadRequest',
+                message: err.message,
+              },
+              400,
+            ),
+          );
+        }
+
+        return next(err);
+      }
+    },
   };
 }
