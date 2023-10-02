@@ -79,3 +79,24 @@ app.setRoutes([
     testRoute
 ])
 ```
+
+Query Middleware
+
+```ts
+const app = new App();
+
+app.setRoutes([
+  new Router()
+    .setPath('/')
+    .setMethod('get')
+    .addMiddlewares([createQueryMiddleware().forAll])
+    .handle(async (context) => context?.req.query)
+    .make(),
+  new Router()
+    .setPath('/')
+    .setMethod('get')
+    .addMiddlewares([createQueryMiddleware().forSingle])
+    .handle(async (context) => context?.req.query)
+    .make();
+]);
+```
