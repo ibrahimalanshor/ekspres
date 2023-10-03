@@ -16,7 +16,9 @@ export class RouterGroup {
     const router = Router();
 
     this.handlers.forEach((handler) => {
-      router[handler.method](handler.path, (req, res) => res.send('Ok'));
+      router[handler.method](handler.path, async (req, res) =>
+        res.json(await handler.handler({ req, res })),
+      );
     });
 
     return router;

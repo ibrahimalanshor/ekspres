@@ -1,4 +1,7 @@
-export interface RouteGroupHandler {
+import { RouterHandler, RouterMethod } from '../router/router.types';
+
+export interface RouteGroupHandler<T = any> {
   path: string;
-  method: 'get' | 'post' | 'patch' | 'delete';
+  method: RouterMethod;
+  handler: RouterHandler<T>;
 }
