@@ -4,6 +4,8 @@ import { RouterGroupError } from '../errors/router-group.error';
 import { App } from '../app/app';
 import supertest from 'supertest';
 import { RouterHandler } from '../router/router.types';
+import { ErrorResponse } from '../app/app.types';
+import { HttpError } from '../errors/http.error';
 
 // new RouterGroup(handler)
 //     .handle(handler => ({
@@ -58,7 +60,7 @@ describe.only('router group', () => {
     });
   });
 
-  describe.only('handler', () => {
+  describe('handler', () => {
     test('called', async () => {
       const router = new RouterGroup();
       const app = new App();
@@ -95,6 +97,81 @@ describe.only('router group', () => {
       await supertest(app.getServer()).delete('/').expect(200);
 
       expect(handler).toHaveBeenCalledTimes(4);
+    });
+
+    test('resolved value', async () => {
+      const router = new RouterGroup();
+      const app = new App();
+
+      const handler = jest.fn<RouterHandler<string>>().mockResolvedValue('Ok');
+
+      router.handle({
+        path: '/',
+        method: 'get',
+        handler,
+      });
+
+      app.setRoutes([router.make()]);
+
+      const res = await supertest(app.getServer()).get('/').expect(200);
+
+      expect(res.body).toEqual('Ok');
+    });
+  });
+
+  describe('handle error', () => {
+    test('internal server error', async () => {
+      const router = new RouterGroup();
+      const app = new App();
+
+      const handler = jest
+        .fn<() => Promise<never>>()
+        .mockRejectedValue(new Error('Something Error'));
+      router.handle({
+        path: '/',
+        method: 'get',
+        handler,
+      });
+
+      app.setRoutes([router.make()]);
+
+      const res = await supertest(app.getServer()).get('/').expect(500);
+      const errorRes: ErrorResponse = {
+        name: 'Internal Server Error',
+        message: 'Something Error',
+        status: 500,
+      };
+
+      expect(res.body).toEqual(errorRes);
+    });
+    test('http error', async () => {
+      const router = new RouterGroup();
+      const app = new App();
+
+      const handler = jest.fn<() => Promise<never>>().mockRejectedValue(
+        new HttpError(
+          {
+            name: 'Forbidden',
+            message: 'You dont have access',
+          },
+          403,
+        ),
+      );
+      router.handle({
+        path: '/',
+        method: 'get',
+        handler,
+      });
+
+      app.setRoutes([router.make()]);
+
+      const res = await supertest(app.getServer()).get('/').expect(403);
+      const errorRes: ErrorResponse = {
+        message: 'You dont have access',
+        name: 'Forbidden',
+        status: 403,
+      };
+      expect(res.body).toEqual(errorRes);
     });
   });
 });

@@ -16,9 +16,13 @@ export class RouterGroup {
     const router = Router();
 
     this.handlers.forEach((handler) => {
-      router[handler.method](handler.path, async (req, res) =>
-        res.json(await handler.handler({ req, res })),
-      );
+      router[handler.method](handler.path, async (req, res, next) => {
+        try {
+          return res.json(await handler.handler({ req, res }));
+        } catch (err) {
+          next(err);
+        }
+      });
     });
 
     return router;
