@@ -7,19 +7,7 @@ import { RouterHandler } from '../router/router.types';
 import { ErrorResponse } from '../app/app.types';
 import { HttpError } from '../errors/http.error';
 
-// new RouterGroup(handler)
-//     .handle(handler => ({
-//         path: '/',
-//         method: 'get',
-//         handler: handler.getAll
-//     }))
-//     .handle(handler => ({
-//         path: '/',
-//         method: 'post',
-//         handler: handler.createAll
-//     }))
-
-describe.only('router group', () => {
+describe('router group', () => {
   describe('make', () => {
     test('throw if no handler', () => {
       const router = new RouterGroup();

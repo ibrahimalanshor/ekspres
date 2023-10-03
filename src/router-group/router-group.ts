@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { RouterGroupError } from '../errors/router-group.error';
-import { RouteGroupHandler } from './router-group.types';
+import { RouterGroupHandler } from './router-group.types';
 
 export class RouterGroup {
-  handlers: RouteGroupHandler[] = [];
+  handlers: RouterGroupHandler[] = [];
 
   make(): Router {
     if (!this.handlers.length) {
@@ -18,7 +18,9 @@ export class RouterGroup {
     this.handlers.forEach((handler) => {
       router[handler.method](handler.path, async (req, res, next) => {
         try {
-          return res.json(await handler.handler({ req, res }));
+          return res.json(
+            await handler.handler({ body: req.body, query: req.query }),
+          );
         } catch (err) {
           next(err);
         }
@@ -28,7 +30,7 @@ export class RouterGroup {
     return router;
   }
 
-  handle(routeHandler: RouteGroupHandler): this {
+  handle(routeHandler: RouterGroupHandler): this {
     this.handlers.push(routeHandler);
 
     return this;
