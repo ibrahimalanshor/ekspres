@@ -55,6 +55,28 @@ const testRoute = new Router()
 app.setRoutes([testRoute]);
 ```
 
+Route Group
+
+```ts
+import { App, RouterGroup } from 'ekspres';
+
+const app = new App();
+const testRoute = new RouterGroup()
+  .handle({
+    path: '/',
+    method: 'Get',
+    handler: async () => 'Ok',
+  })
+  .handle({
+    path: '/',
+    method: 'post',
+    handler: async () => 'Ok',
+  })
+  .make();
+
+app.setRoutes([testRoute]);
+```
+
 Throw Http Error
 
 ```ts
