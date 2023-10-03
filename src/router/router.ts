@@ -69,7 +69,10 @@ export class Router<T> {
         this.midllewares,
         async (req: Request, res: Response, next: NextFunction) => {
           try {
-            const data = await this.handler({ req, res });
+            const data = await this.handler({
+              body: req.body,
+              query: req.query,
+            });
 
             return res.json(data);
           } catch (err) {

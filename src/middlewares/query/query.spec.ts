@@ -23,7 +23,7 @@ describe('query', () => {
         .setPath('/')
         .setMethod('get')
         .addMiddlewares([createQueryMiddleware().forAll])
-        .handle(async (context) => context?.req.query);
+        .handle(async (context) => context?.query);
 
       app.setRoutes([router.make()]);
 
@@ -48,7 +48,7 @@ describe('query', () => {
         .setPath('/')
         .setMethod('get')
         .addMiddlewares([createQueryMiddleware().forAll])
-        .handle(async (context) => context?.req.query);
+        .handle(async (context) => context?.query);
 
       app.setRoutes([router.make()]);
 
@@ -74,7 +74,7 @@ describe('query', () => {
         .setPath('/')
         .setMethod('get')
         .addMiddlewares([createQueryMiddleware().forSingle])
-        .handle(async (context) => context?.req.query);
+        .handle(async (context) => context?.query);
 
       app.setRoutes([router.make()]);
 
@@ -99,7 +99,7 @@ describe('query', () => {
         .setPath('/')
         .setMethod('get')
         .addMiddlewares([createQueryMiddleware().forSingle])
-        .handle(async (context) => context?.req.query);
+        .handle(async (context) => context?.query);
 
       app.setRoutes([router.make()]);
 
