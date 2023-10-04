@@ -43,6 +43,7 @@
   "dependencies": {
     "express": "^4.18.2",
     "galat": "^1.0.2",
+    "joi": "^17.11.0",
     "kueri": "^1.0.0"
   }
 }
