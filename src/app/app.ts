@@ -42,6 +42,9 @@ export class App {
   }
 
   setup() {
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
+
     this.middlewares.forEach((middleware) => this.app.use(middleware));
     this.routes.forEach((route) => this.app.use(route));
 

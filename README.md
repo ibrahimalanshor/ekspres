@@ -105,6 +105,8 @@ app.setRoutes([
 Query Middleware
 
 ```ts
+import { App, Router, createQueryMiddleware } from 'ekspres'
+
 const app = new App();
 
 app.setRoutes([
@@ -120,5 +122,31 @@ app.setRoutes([
     .addMiddlewares([createQueryMiddleware().forSingle])
     .handle(async (context) => context?.req.query)
     .make();
+]);
+```
+
+Request Validator
+
+```ts
+import { App, Router, Request, createRequestValidator } from 'ekspres';
+
+const app = new App();
+const router = new Router();
+
+class CreateUserRequest extends Request {
+  schema(): Schema {
+    return Joi.object({
+      email: Joi.string().email().required(),
+    });
+  }
+}
+
+app.setRoutes([
+  router
+    .setPath('/')
+    .setMethod('post')
+    .addMiddlewares([createRequestValidator(CreateUserRequest)])
+    .handle(async (context) => context.body)
+    .make(),
 ]);
 ```
