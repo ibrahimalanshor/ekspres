@@ -1,6 +1,6 @@
 {
   "name": "ekspres",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "ekspres",
   "homepage": "https://github.com/ibrahimalanshor/ekspres#readme",
   "author": "Ibrahim Al Anshor <ibrahimalanshor6@gmail.com> (https://ibrahimalanshor.github.io/)",
@@ -43,6 +43,7 @@
   "dependencies": {
     "express": "^4.18.2",
     "galat": "^1.0.2",
+    "joi": "^17.11.0",
     "kueri": "^1.0.0"
   }
 }
