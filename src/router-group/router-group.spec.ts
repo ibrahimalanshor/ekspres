@@ -6,6 +6,7 @@ import supertest from 'supertest';
 import { RouterHandler } from '../router/router.types';
 import { ErrorResponse } from '../app/app.types';
 import { HttpError } from '../errors/http.error';
+import { NextFunction } from 'express';
 
 describe('router group', () => {
   describe('make', () => {
@@ -104,6 +105,31 @@ describe('router group', () => {
       const res = await supertest(app.getServer()).get('/').expect(200);
 
       expect(res.body).toEqual('Ok');
+    });
+  });
+
+  describe('middleware', () => {
+    test('handler called', async () => {
+      const router = new RouterGroup();
+      const app = new App();
+
+      const middlewares = [
+        jest.fn((req, res, next: NextFunction) => next()),
+        jest.fn((req, res, next: NextFunction) => next()),
+      ];
+
+      router.handle({
+        path: '/',
+        method: 'get',
+        middlewares,
+        handler: async () => 'Ok',
+      });
+      app.setRoutes([router.make()]);
+
+      await supertest(app.getServer()).get('/').expect(200);
+
+      expect(middlewares[0]).toHaveBeenCalled();
+      expect(middlewares[1]).toHaveBeenCalled();
     });
   });
 
