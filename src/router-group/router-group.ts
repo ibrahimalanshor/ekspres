@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { RouterGroupError } from '../errors/router-group.error';
 import { RouterGroupHandler } from './router-group.types';
 
@@ -16,7 +16,11 @@ export class RouterGroup {
     const router = Router();
 
     this.handlers.forEach((handler) => {
-      router[handler.method](handler.path, async (req, res, next) => {
+      const resolver = async (
+        req: Request,
+        res: Response,
+        next: NextFunction,
+      ) => {
         try {
           return res.json(
             await handler.handler({ body: req.body, query: req.query }),
@@ -24,7 +28,12 @@ export class RouterGroup {
         } catch (err) {
           next(err);
         }
-      });
+      };
+
+      router[handler.method](handler.path, [
+        ...(handler.middlewares ?? []),
+        resolver,
+      ]);
     });
 
     return router;
