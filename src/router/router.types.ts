@@ -3,4 +3,4 @@ export interface RouterContext {
   query: Record<string, any>;
   body: Record<string, any>;
 }
-export type RouterHandler<T> = (context?: RouterContext) => Promise<T>;
+export type RouterHandler<T> = (context: RouterContext) => Promise<T>;
