@@ -72,6 +72,7 @@ export class Router<T> {
             const data = await this.handler({
               body: req.body,
               query: req.query,
+              params: req.params,
             });
 
             return res.json(data);

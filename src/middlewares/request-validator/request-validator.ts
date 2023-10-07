@@ -9,11 +9,11 @@ export function createRequestValidator(
 ): Handler {
   const request = new RequestClass();
 
-  async function validateBody(
-    body: Record<string, any>,
+  async function validate(
+    values: Record<string, any>,
   ): Promise<Record<string, any>> {
     try {
-      return await request.schema().validateAsync(body, {
+      return await request.schema().validateAsync(values, {
         allowUnknown: true,
         stripUnknown: true,
       });
@@ -28,7 +28,7 @@ export function createRequestValidator(
 
   return async (req, res, next) => {
     try {
-      req.body = await validateBody(req.body);
+      req[request.path] = await validate(req[request.path]);
 
       next();
     } catch (err) {

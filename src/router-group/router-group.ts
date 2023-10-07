@@ -23,7 +23,11 @@ export class RouterGroup {
       ) => {
         try {
           return res.json(
-            await handler.handler({ body: req.body, query: req.query }),
+            await handler.handler({
+              body: req.body,
+              query: req.query,
+              params: req.params,
+            }),
           );
         } catch (err) {
           next(err);
