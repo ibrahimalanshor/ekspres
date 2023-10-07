@@ -128,12 +128,20 @@ app.setRoutes([
 Request Validator
 
 ```ts
-import { App, Router, Request, createRequestValidator } from 'ekspres';
+import {
+  App,
+  Router,
+  Request,
+  RequestPath,
+  createRequestValidator,
+} from 'ekspres';
 
 const app = new App();
 const router = new Router();
 
 class CreateUserRequest extends Request {
+  path: RequestPath = 'body'; // 'params' | 'query' | 'body' (default body)
+
   schema(): Schema {
     return Joi.object({
       email: Joi.string().email().required(),

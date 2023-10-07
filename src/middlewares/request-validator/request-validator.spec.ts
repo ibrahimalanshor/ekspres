@@ -4,7 +4,7 @@ import { createRequestValidator } from './request-validator';
 import { App } from '../../app/app';
 import { Router } from '../../router/router';
 import supertest from 'supertest';
-import { Request } from './request';
+import { Request, RequestPath } from './request';
 import Joi, { Schema } from 'joi';
 
 describe('request validator', () => {
@@ -108,6 +108,38 @@ describe('request validator', () => {
       };
 
       expect(res.body).toEqual(body);
+    });
+
+    test('validate params', async () => {
+      const app = new App();
+      const router = new Router();
+
+      class TestRequest extends Request {
+        public path: RequestPath = 'params';
+
+        schema(): Joi.Schema {
+          return Joi.object({
+            id: Joi.number().required(),
+          });
+        }
+      }
+
+      app.setRoutes([
+        router
+          .setPath('/:id')
+          .setMethod('get')
+          .addMiddlewares([createRequestValidator(TestRequest)])
+          .handle(async () => 'Ok')
+          .make(),
+      ]);
+
+      const res = await supertest(app.getServer()).get('/NaN').expect(422);
+      const detailsError = {
+        id: '"id" must be a number',
+      };
+
+      expect(res.body).toHaveProperty('details');
+      expect(res.body.details).toEqual(detailsError);
     });
   });
 
